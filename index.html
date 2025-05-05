@@ -1,90 +1,493 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Meeting Optimizer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background-color: #f8f8f8;
-      color: #333;
-    }
-    h1 {
-      color: #2c3e50;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-bottom: 1.5rem;
-    }
-    .meeting {
-      background: #fff;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-left: 5px solid #3498db;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .low-value {
-      border-left-color: #e74c3c;
-    }
-    .suggestion {
-      font-style: italic;
-      color: #7f8c8d;
-    }
-    .summary {
-      background: #ecf0f1;
-      padding: 1rem;
-      margin-top: 2rem;
-    }
-  </style>
-</head>
-<body>
-  <h1>✅ AI Meeting Value Report</h1>
-  <button onclick="analyzeMeetings()">Analyze My Meetings</button>
-  <div id="output"></div>
+import React, { useState } from 'react';
+import { Calendar, User, Clock, FileText, MessageCircle, Check, X, AlertCircle, BarChart } from 'lucide-react';
 
-  <script>
-    const meetings = [
-      { title: "Product Weekly Sync", type: "discussion" },
-      { title: "PM Status Update", type: "update" },
-      { title: "Daily Standup", type: "update" }
-    ];
-
-    function analyzeMeetings() {
-      let output = '';
-      let lowValueCount = 0;
-
-      meetings.forEach(meeting => {
-        let isLowValue = meeting.type === 'update';
-        if (isLowValue) lowValueCount++;
-
-        output += `
-          <div class="meeting ${isLowValue ? 'low-value' : ''}">
-            <strong>Meeting:</strong> ${meeting.title}<br/>
-            <strong>Assessment:</strong> ${isLowValue ? 'Can be asynchronous' : 'Valuable (includes decision-making or collaboration)'}<br/>
-            ${isLowValue ? `<div class="suggestion">Suggested async alternative: ${meeting.title.includes('Daily') ? 'Notion board' : 'Slack update'}</div>` : ''}
-          </div>
-        `;
+const MeetingFatigueReducer = () => {
+  const [meetings, setMeetings] = useState([
+    { id: 1, title: 'Weekly Team Sync', duration: 60, participants: 8, recurring: true, necessity: 0.7 },
+    { id: 2, title: 'Project Planning', duration: 45, participants: 5, recurring: false, necessity: 0.9 },
+    { id: 3, title: 'Status Update', duration: 30, participants: 12, recurring: true, necessity: 0.4 },
+    { id: 4, title: 'Product Review', duration: 60, participants: 6, recurring: false, necessity: 0.8 },
+    { id: 5, title: 'Design Discussion', duration: 45, participants: 4, recurring: false, necessity: 0.6 },
+  ]);
+  
+  const [newMeeting, setNewMeeting] = useState({
+    title: '',
+    duration: 30,
+    participants: 3,
+    recurring: false
+  });
+  
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  
+  // AI recommendation engine
+  const analyzeMeeting = (meeting) => {
+    const recommendations = [];
+    
+    // Calculate meeting score based on duration, participants, necessity
+    const timeImpact = meeting.duration * meeting.participants / 60; // person-hours
+    
+    if (meeting.recurring && meeting.necessity < 0.6) {
+      recommendations.push({
+        type: 'convert',
+        title: 'Convert to async update',
+        description: 'This recurring meeting has low necessity. Consider replacing with a written update in your team workspace.',
+        impact: 'Saves approximately ' + timeImpact + ' person-hours per occurrence'
       });
-
-      output += `
-        <div class="summary">
-          <strong>⭐ Summary:</strong><br/>
-          - Total meetings analyzed: ${meetings.length}<br/>
-          - Async recommendation: ${lowValueCount} meeting(s)<br/>
-          - Estimated time saved: <strong>${lowValueCount * 1} hour(s)</strong><br/>
-          - Recommended async tools: Slack, Notion, Email
-        </div>
-      `;
-
-      document.getElementById('output').innerHTML = output;
     }
-  </script>
-</body>
-</html>
+    
+    if (meeting.participants > 6 && meeting.necessity < 0.8) {
+      recommendations.push({
+        type: 'reduce',
+        title: 'Reduce participants',
+        description: 'This meeting has many participants but moderate necessity. Consider reducing to core team members only.',
+        impact: 'Could save approximately ' + (meeting.duration * (meeting.participants - 5) / 60).toFixed(1) + ' person-hours'
+      });
+    }
+    
+    if (meeting.duration >= 60) {
+      recommendations.push({
+        type: 'shorten',
+        title: 'Shorten duration',
+        description: 'This meeting is 60+ minutes. Consider a focused 30-minute format with a clear agenda.',
+        impact: 'Could save approximately ' + (meeting.duration * meeting.participants / 60 / 2).toFixed(1) + ' person-hours'
+      });
+    }
+    
+    // If no specific recommendations, provide a general one
+    if (recommendations.length === 0) {
+      recommendations.push({
+        type: 'optimize',
+        title: 'Optimize with agenda',
+        description: 'This meeting appears necessary. Ensure it has a clear agenda and action items.',
+        impact: 'Improves meeting effectiveness by approximately 25%'
+      });
+    }
+    
+    return recommendations;
+  };
+  
+  // Calculate overall stats
+  const calculateStats = () => {
+    const totalMeetings = meetings.length;
+    const totalHours = meetings.reduce((sum, m) => sum + m.duration / 60, 0);
+    const totalParticipantHours = meetings.reduce((sum, m) => sum + (m.duration / 60) * m.participants, 0);
+    const potentialSavings = meetings.reduce((sum, m) => {
+      if (m.necessity < 0.7) return sum + (m.duration / 60) * m.participants;
+      return sum;
+    }, 0);
+    
+    return {
+      totalMeetings,
+      totalHours,
+      totalParticipantHours,
+      potentialSavings
+    };
+  };
+  
+  const stats = calculateStats();
+  
+  // Handler for adding a new meeting
+  const handleAddMeeting = () => {
+    if (!newMeeting.title) return;
+    
+    const meetingWithNecessity = {
+      ...newMeeting,
+      id: meetings.length + 1,
+      necessity: Math.random() * 0.5 + 0.5 // Random necessity between 0.5 and 1.0
+    };
+    
+    setMeetings([...meetings, meetingWithNecessity]);
+    setNewMeeting({
+      title: '',
+      duration: 30,
+      participants: 3,
+      recurring: false
+    });
+  };
+  
+  // Handle viewing a meeting's details and recommendations
+  const handleViewMeeting = (meeting) => {
+    setSelectedMeeting({
+      ...meeting,
+      recommendations: analyzeMeeting(meeting)
+    });
+    setActiveTab('recommendations');
+  };
+  
+  return (
+    <div className="flex flex-col h-screen max-w-6xl mx-auto p-6 bg-gray-50">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-blue-800">Meeting Fatigue Reducer</h1>
+        <p className="text-gray-600">AI-powered meeting analysis and recommendations</p>
+      </header>
+      
+      <div className="flex mb-6 space-x-2 border-b border-gray-200">
+        <button 
+          className={`px-4 py-2 font-medium ${activeTab === 'dashboard' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('dashboard')}
+        >
+          Dashboard
+        </button>
+        <button 
+          className={`px-4 py-2 font-medium ${activeTab === 'meetings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('meetings')}
+        >
+          Meetings
+        </button>
+        <button 
+          className={`px-4 py-2 font-medium ${activeTab === 'recommendations' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('recommendations')}
+          disabled={!selectedMeeting}
+        >
+          Recommendations
+        </button>
+      </div>
+      
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Meeting Stats</h2>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-3xl font-bold text-blue-700">{stats.totalMeetings}</div>
+                <div className="text-sm text-gray-600">Total Meetings</div>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-3xl font-bold text-green-700">{stats.totalHours.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Total Hours</div>
+              </div>
+              
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="text-3xl font-bold text-purple-700">{stats.totalParticipantHours.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Person-Hours</div>
+              </div>
+              
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <div className="text-3xl font-bold text-amber-700">{stats.potentialSavings.toFixed(1)}</div>
+                <div className="text-sm text-gray-600">Potential Savings</div>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="font-medium mb-2">Time Impact by Meeting</h3>
+              <div className="space-y-2">
+                {meetings.map(meeting => (
+                  <div key={meeting.id} className="flex items-center">
+                    <div className="w-32 truncate">{meeting.title}</div>
+                    <div className="flex-1 ml-2">
+                      <div className="bg-gray-200 h-4 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${meeting.necessity > 0.7 ? 'bg-green-500' : 'bg-amber-500'}`}
+                          style={{ width: `${(meeting.duration * meeting.participants / stats.totalParticipantHours / 60) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="ml-2 text-sm text-gray-600">
+                      {((meeting.duration * meeting.participants / 60)).toFixed(1)} hrs
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">AI Insights</h2>
+            
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex">
+                  <MessageCircle className="text-blue-500 mr-2" />
+                  <h3 className="font-medium">Convert Status Updates</h3>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">
+                  {meetings.filter(m => m.necessity < 0.5 && m.recurring).length} recurring meetings could be converted to async updates, saving approximately {
+                    meetings.filter(m => m.necessity < 0.5 && m.recurring)
+                      .reduce((sum, m) => sum + (m.duration * m.participants / 60), 0).toFixed(1)
+                  } person-hours per week.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="flex">
+                  <User className="text-green-500 mr-2" />
+                  <h3 className="font-medium">Reduce Participants</h3>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">
+                  {meetings.filter(m => m.participants > 6).length} meetings have more than 6 participants. Consider the RACI method to identify essential attendees.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <div className="flex">
+                  <Clock className="text-amber-500 mr-2" />
+                  <h3 className="font-medium">Shorten Meetings</h3>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">
+                  {meetings.filter(m => m.duration >= 60).length} meetings are 60+ minutes. Try 25-minute meetings instead of 30, and 50 instead of 60.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="font-medium mb-2">Meeting Necessity Distribution</h3>
+              <div className="h-40 flex items-end space-x-2">
+                {[0.1, 0.3, 0.5, 0.7, 0.9].map(threshold => {
+                  const count = meetings.filter(m => 
+                    m.necessity >= threshold - 0.1 && 
+                    m.necessity < threshold + 0.1
+                  ).length;
+                  
+                  return (
+                    <div key={threshold} className="flex-1 flex flex-col items-center">
+                      <div className="text-xs text-gray-600 mb-1">{count}</div>
+                      <div 
+                        className={`w-full ${threshold < 0.5 ? 'bg-red-400' : threshold < 0.7 ? 'bg-amber-400' : 'bg-green-400'}`}
+                        style={{ height: `${(count / meetings.length) * 100}%`, minHeight: '4px' }}
+                      ></div>
+                      <div className="text-xs text-gray-600 mt-1">{threshold.toFixed(1)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-center mt-1 text-gray-500">Necessity Score (higher is more necessary)</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'meetings' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Your Meetings</h2>
+            
+            <div className="space-y-3">
+              {meetings.map(meeting => (
+                <div 
+                  key={meeting.id} 
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewMeeting(meeting)}
+                >
+                  <div className="flex justify-between">
+                    <h3 className="font-medium">{meeting.title}</h3>
+                    <div className={`px-2 py-1 rounded-full text-xs ${
+                      meeting.necessity > 0.7 ? 'bg-green-100 text-green-800' : 
+                      meeting.necessity > 0.5 ? 'bg-amber-100 text-amber-800' : 
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {meeting.necessity > 0.7 ? 'High value' : 
+                       meeting.necessity > 0.5 ? 'Medium value' : 
+                       'Low value'}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 flex items-center text-sm text-gray-600">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>{meeting.duration} min</span>
+                    
+                    <User className="w-4 h-4 ml-3 mr-1" />
+                    <span>{meeting.participants} people</span>
+                    
+                    {meeting.recurring && (
+                      <span className="ml-3 px-2 bg-blue-50 text-blue-700 rounded-full text-xs">Recurring</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Add New Meeting</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Meeting Title
+                </label>
+                <input
+                  type="text"
+                  value={newMeeting.title}
+                  onChange={(e) => setNewMeeting({...newMeeting, title: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Weekly Team Sync"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration (minutes)
+                  </label>
+                  <select
+                    value={newMeeting.duration}
+                    onChange={(e) => setNewMeeting({...newMeeting, duration: parseInt(e.target.value)})}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={45}>45 min</option>
+                    <option value={60}>60 min</option>
+                    <option value={90}>90 min</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Participants
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newMeeting.participants}
+                    onChange={(e) => setNewMeeting({...newMeeting, participants: parseInt(e.target.value)})}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="recurring"
+                  checked={newMeeting.recurring}
+                  onChange={(e) => setNewMeeting({...newMeeting, recurring: e.target.checked})}
+                  className="h-4 w-4 text-blue-600 rounded"
+                />
+                <label htmlFor="recurring" className="ml-2 text-sm text-gray-700">
+                  This is a recurring meeting
+                </label>
+              </div>
+              
+              <button
+                onClick={handleAddMeeting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+              >
+                Add Meeting
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'recommendations' && selectedMeeting && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold">{selectedMeeting.title}</h2>
+              <div className="flex mt-1 text-sm text-gray-600">
+                <div className="flex items-center mr-4">
+                  <Clock className="w-4 h-4 mr-1" />
+                  {selectedMeeting.duration} minutes
+                </div>
+                <div className="flex items-center mr-4">
+                  <User className="w-4 h-4 mr-1" />
+                  {selectedMeeting.participants} participants
+                </div>
+                {selectedMeeting.recurring && (
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Recurring
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className={`px-3 py-1 rounded-full ${
+              selectedMeeting.necessity > 0.7 ? 'bg-green-100 text-green-800' : 
+              selectedMeeting.necessity > 0.5 ? 'bg-amber-100 text-amber-800' : 
+              'bg-red-100 text-red-800'
+            }`}>
+              {selectedMeeting.necessity > 0.7 ? 'High Value Meeting' : 
+               selectedMeeting.necessity > 0.5 ? 'Medium Value Meeting' : 
+               'Low Value Meeting'}
+            </div>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-3">AI Recommendations</h3>
+            
+            <div className="space-y-4">
+              {selectedMeeting.recommendations.map((rec, idx) => (
+                <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    {rec.type === 'convert' && <MessageCircle className="text-blue-500 mr-2" />}
+                    {rec.type === 'reduce' && <User className="text-green-500 mr-2" />}
+                    {rec.type === 'shorten' && <Clock className="text-amber-500 mr-2" />}
+                    {rec.type === 'optimize' && <FileText className="text-purple-500 mr-2" />}
+                    <h4 className="font-medium">{rec.title}</h4>
+                  </div>
+                  
+                  <p className="mt-2 text-gray-600">{rec.description}</p>
+                  
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="text-sm font-medium text-blue-700">{rec.impact}</span>
+                    
+                    <div className="flex space-x-2">
+                      <button className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm">
+                        Implement
+                      </button>
+                      <button className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-sm">
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-medium mb-3">Alternative Meeting Formats</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-2">
+                  <FileText className="text-blue-500 mr-2" />
+                  <h4 className="font-medium">Async Document</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Replace with a collaborative document where team members can add updates and comments.
+                </p>
+                <button className="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-sm">
+                  Convert to Doc
+                </button>
+              </div>
+              
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-2">
+                  <MessageCircle className="text-green-500 mr-2" />
+                  <h4 className="font-medium">Chat Thread</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Move the discussion to a dedicated chat thread with clear action items and owners.
+                </p>
+                <button className="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-sm">
+                  Convert to Thread
+                </button>
+              </div>
+              
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-2">
+                  <BarChart className="text-purple-500 mr-2" />
+                  <h4 className="font-medium">Status Dashboard</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Create a real-time dashboard where team members can view project status updates.
+                </p>
+                <button className="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-sm">
+                  Create Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MeetingFatigueReducer;
