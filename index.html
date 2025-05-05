@@ -14,6 +14,15 @@
     h1 {
       color: #2c3e50;
     }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
     .meeting {
       background: #fff;
       padding: 1rem;
@@ -37,30 +46,45 @@
 </head>
 <body>
   <h1>✅ AI Meeting Value Report</h1>
+  <button onclick="analyzeMeetings()">Analyze My Meetings</button>
+  <div id="output"></div>
 
-  <div class="meeting">
-    <strong>Meeting:</strong> Product Weekly Sync<br/>
-    <strong>Assessment:</strong> Valuable (includes decision-making and cross-functional collaboration)<br/>
-  </div>
+  <script>
+    const meetings = [
+      { title: "Product Weekly Sync", type: "discussion" },
+      { title: "PM Status Update", type: "update" },
+      { title: "Daily Standup", type: "update" }
+    ];
 
-  <div class="meeting low-value">
-    <strong>Meeting:</strong> PM Status Update<br/>
-    <strong>Assessment:</strong> Can be asynchronous<br/>
-    <div class="suggestion">Suggested: Share update via Slack message</div>
-  </div>
+    function analyzeMeetings() {
+      let output = '';
+      let lowValueCount = 0;
 
-  <div class="meeting low-value">
-    <strong>Meeting:</strong> Daily Standup<br/>
-    <strong>Assessment:</strong> Consider reducing to weekly<br/>
-    <div class="suggestion">Suggested: Use shared Notion board for updates</div>
-  </div>
+      meetings.forEach(meeting => {
+        let isLowValue = meeting.type === 'update';
+        if (isLowValue) lowValueCount++;
 
-  <div class="summary">
-    <strong>⭐ Summary:</strong><br/>
-    - Out of 3 meetings this week, 2 could be replaced with async communication<br/>
-    - Estimated time saved: <strong>2 hours</strong><br/>
-    - Recommended async tools: Slack, Notion, Email
-  </div>
+        output += `
+          <div class="meeting ${isLowValue ? 'low-value' : ''}">
+            <strong>Meeting:</strong> ${meeting.title}<br/>
+            <strong>Assessment:</strong> ${isLowValue ? 'Can be asynchronous' : 'Valuable (includes decision-making or collaboration)'}<br/>
+            ${isLowValue ? `<div class="suggestion">Suggested async alternative: ${meeting.title.includes('Daily') ? 'Notion board' : 'Slack update'}</div>` : ''}
+          </div>
+        `;
+      });
 
+      output += `
+        <div class="summary">
+          <strong>⭐ Summary:</strong><br/>
+          - Total meetings analyzed: ${meetings.length}<br/>
+          - Async recommendation: ${lowValueCount} meeting(s)<br/>
+          - Estimated time saved: <strong>${lowValueCount * 1} hour(s)</strong><br/>
+          - Recommended async tools: Slack, Notion, Email
+        </div>
+      `;
+
+      document.getElementById('output').innerHTML = output;
+    }
+  </script>
 </body>
 </html>
