@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Meeting Optimizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f8f8f8;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .meeting {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 5px solid #3498db;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .low-value {
+      border-left-color: #e74c3c;
+    }
+    .suggestion {
+      font-style: italic;
+      color: #7f8c8d;
+    }
+    .summary {
+      background: #ecf0f1;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>✅ AI Meeting Value Report</h1>
+
+  <div class="meeting">
+    <strong>Meeting:</strong> Product Weekly Sync<br/>
+    <strong>Assessment:</strong> Valuable (includes decision-making and cross-functional collaboration)<br/>
+  </div>
+
+  <div class="meeting low-value">
+    <strong>Meeting:</strong> PM Status Update<br/>
+    <strong>Assessment:</strong> Can be asynchronous<br/>
+    <div class="suggestion">Suggested: Share update via Slack message</div>
+  </div>
+
+  <div class="meeting low-value">
+    <strong>Meeting:</strong> Daily Standup<br/>
+    <strong>Assessment:</strong> Consider reducing to weekly<br/>
+    <div class="suggestion">Suggested: Use shared Notion board for updates</div>
+  </div>
+
+  <div class="summary">
+    <strong>⭐ Summary:</strong><br/>
+    - Out of 3 meetings this week, 2 could be replaced with async communication<br/>
+    - Estimated time saved: <strong>2 hours</strong><br/>
+    - Recommended async tools: Slack, Notion, Email
+  </div>
+
+</body>
+</html>
